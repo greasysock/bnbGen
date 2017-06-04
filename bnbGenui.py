@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 from support import version
 __author__ = version.get_author()
 __version__ = version.get_version()

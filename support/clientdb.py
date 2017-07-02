@@ -66,6 +66,7 @@ class MainFile():
     def append_csv(self, report):
         with open(report, encoding='utf-8') as rawreport:
             reportparse = parser.report(rawreport)
+            print(reportparse.type())
         if reportparse.type() != -1:
             with open(report, 'rb') as rawreport:
                 filehash = md5(rawreport)

@@ -9,8 +9,8 @@ abb_header = ['\ufeffDate', 'Type', 'Confirmation Code', 'Start Date', 'Nights',
 vrbo_r_header = ['\ufeffReservation ID', 'Listing Number', 'Property Name', 'Created On', 'Email', 'Inquirer', 'Phone', 'Check-in', 'Check-out', 'Nights Stay', 'Adults', 'Children', 'Status', 'Source']
 vrbo_p_header = ['\ufeffRefID', 'Reservation ID', 'Check In', 'Check Out', 'Number of Nights', 'Payment Date', 'Payment Type', 'Property ID', 'Guest Name', 'Payment Method', 'Taxable Revenue', 'Non-Taxable Revenue', 'Tax', 'Service Fee', 'Currency', 'Paid By Guest', 'Your Revenue', 'Payment Processing Fee', 'hac.list.payments.ha.taxes.collected', 'hac.list.payments.partner.taxes.collected', 'Deposit Amount', 'Payable To You']
 vrbo_p1_header = ['\ufeffRefID', 'Reservation ID', 'Check In', 'Check Out', 'Number of Nights', 'Payment Date', 'Disbursement Date', 'Payment Type', 'Property ID', 'Guest Name', 'Payment Method', 'Taxable Revenue', 'Non-Taxable Revenue', 'Tax', 'Service Fee', 'Currency', 'Paid By Guest', 'Your Revenue', 'Payment Processing Fee', 'hac.list.payments.ha.taxes.collected', 'hac.list.payments.partner.taxes.collected', 'Deposit Amount', 'Payable To You']
-
-
+vrbo_p2_header = ['\ufeffRefID', 'Reservation ID', 'Check In', 'Check Out', 'Number of Nights', 'Payment Date', 'Payment Type', 'Property ID', 'Guest Name', 'Payment Method', 'Taxable Revenue', 'Non-Taxable Revenue', 'Tax', 'Service Fee', 'Currency', 'Paid By Guest', 'Your Revenue', 'Payment Processing Fee', 'Stay Tax We Remit', 'Stay Tax You Remit', 'Deposit Amount', 'Payable To You']
+vrbo_p3_header = ['\ufeffRefID', 'Reservation ID', 'Check In', 'Check Out', 'Number of Nights', 'Source', 'Payment Date', 'Disbursement Date', 'Payment Type', 'Property ID', 'Guest Name', 'Payment Method', 'Taxable Revenue', 'Non-Taxable Revenue', 'Tax', 'Service Fee', 'Currency', 'Guest Payment', 'Your Revenue', 'Commission', 'VAT on Commission', 'Payment Processing Fee', 'Stay Tax We Remit', 'Stay Tax You Remit', 'Refundable deposit', 'Payable To You', 'Payout']
 
 def digit_clean(dirty_text):
     return re.search('\d+', dirty_text).group(0)
@@ -63,6 +63,7 @@ class report():
         1: VRBO Reservations
         2: VRBO Payment Stub
         3: VRBO Payment Stub V2
+        4: VRBO Payment Stub V3
         '''
         self.__report_type = self.__report_check()
         if self.__report_type == 0:
@@ -73,6 +74,10 @@ class report():
             self.__vrbo_p_parse()
         elif self.__report_type == 3:
             self.__vrbo_p1_parse()
+        elif self.__report_type == 4:
+            self.__vrbo_p2_parse()
+        elif self.__report_type == 5:
+            self.__vrbo_p3_parse()
     def __report_grab(self, report):
         raw_report = list()
         vraw_report = csv.reader(report, delimiter=',')
@@ -89,6 +94,10 @@ class report():
             return 2
         elif header == vrbo_p1_header:
             return 3
+        elif header == vrbo_p2_header:
+            return 4
+        elif header == vrbo_p3_header:
+            return 5
         else:
             return -1
     def __abb_report_parse(self):
@@ -97,11 +106,11 @@ class report():
             if listing[2] != '' and listing[2] != 'Confirmation Code':
                 try:
                     main_dict[listing[6]].append({'date': date_to_epoch(listing[0],self.type()),'start_date':date_to_epoch(listing[3],self.type()), 'guest': listing[5],
-                                                         'earning': float(listing[10]), 'stay': int(listing[4]), 'clean_fee':int(listing[13])})
+                                                         'earning': float(listing[10]), 'stay': int(listing[4]), 'clean_fee':int(float(listing[13]))})
                 except:
                     main_dict[listing[6]] = list()
                     main_dict[listing[6]].append({'date': date_to_epoch(listing[0],self.type()),'start_date':date_to_epoch(listing[3],self.type()), 'guest': listing[5],
-                                                         'earning': float(listing[10]), 'stay': int(listing[4]),'clean_fee':int(listing[13])})
+                                                         'earning': float(listing[10]), 'stay': int(listing[4]),'clean_fee':int(float(listing[13]))})
         self.__pack = main_dict
     def __vrbo_r_parse(self):
         main_dict = dict()
@@ -127,6 +136,34 @@ class report():
             except IndexError:
                 continue
         self.__pack = main_dict
+    def __vrbo_p2_parse(self):
+        main_dict = dict()
+        for listing in self.__report:
+            try:
+                if listing[0] != '' and listing[0] != vrbo_p_header[0]:
+                    try:
+                        main_dict[digit_clean(listing[7])].append({'date':date_to_epoch(listing[5],self.type()),'guest':listing[8],'earning':money_clean(listing[25])})
+                    except:
+                        main_dict[digit_clean(listing[7])] = list()
+                        main_dict[digit_clean(listing[7])].append({'date': date_to_epoch(listing[5],self.type()), 'guest': listing[8],
+                                                             'earning': money_clean(listing[25])})
+            except IndexError:
+                continue
+        self.__pack = main_dict
+    def __vrbo_p3_parse(self):
+        main_dict = dict()
+        for listing in self.__report:
+            try:
+                if listing[0] != '' and listing[0] != vrbo_p_header[0]:
+                    try:
+                        main_dict[digit_clean(listing[9])].append({'date':date_to_epoch(listing[7],self.type()),'guest':listing[10],'earning':money_clean(listing[21])})
+                    except:
+                        main_dict[digit_clean(listing[9])] = list()
+                        main_dict[digit_clean(listing[9])].append({'date': date_to_epoch(listing[7],self.type()), 'guest': listing[10],
+                                                             'earning': money_clean(listing[21])})
+            except IndexError:
+                continue
+        self.__pack = main_dict
     def __vrbo_p_parse(self):
         main_dict = dict()
         for listing in self.__report:
@@ -147,7 +184,7 @@ class report():
         except:
             return -1
     def type(self):
-        if self.__report_type == 3:
+        if self.__report_type == 3 or self.__report_type == 4 or self.__report_type == 5:
             return 2
         else:
             return self.__report_type

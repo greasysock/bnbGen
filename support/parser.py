@@ -11,6 +11,8 @@ vrbo_p_header = ['\ufeffRefID', 'Reservation ID', 'Check In', 'Check Out', 'Numb
 vrbo_p1_header = ['\ufeffRefID', 'Reservation ID', 'Check In', 'Check Out', 'Number of Nights', 'Payment Date', 'Disbursement Date', 'Payment Type', 'Property ID', 'Guest Name', 'Payment Method', 'Taxable Revenue', 'Non-Taxable Revenue', 'Tax', 'Service Fee', 'Currency', 'Paid By Guest', 'Your Revenue', 'Payment Processing Fee', 'hac.list.payments.ha.taxes.collected', 'hac.list.payments.partner.taxes.collected', 'Deposit Amount', 'Payable To You']
 vrbo_p2_header = ['\ufeffRefID', 'Reservation ID', 'Check In', 'Check Out', 'Number of Nights', 'Payment Date', 'Payment Type', 'Property ID', 'Guest Name', 'Payment Method', 'Taxable Revenue', 'Non-Taxable Revenue', 'Tax', 'Service Fee', 'Currency', 'Paid By Guest', 'Your Revenue', 'Payment Processing Fee', 'Stay Tax We Remit', 'Stay Tax You Remit', 'Deposit Amount', 'Payable To You']
 vrbo_p3_header = ['\ufeffRefID', 'Reservation ID', 'Check In', 'Check Out', 'Number of Nights', 'Source', 'Payment Date', 'Disbursement Date', 'Payment Type', 'Property ID', 'Guest Name', 'Payment Method', 'Taxable Revenue', 'Non-Taxable Revenue', 'Tax', 'Service Fee', 'Currency', 'Guest Payment', 'Your Revenue', 'Commission', 'VAT on Commission', 'Payment Processing Fee', 'Stay Tax We Remit', 'Stay Tax You Remit', 'Refundable deposit', 'Payable To You', 'Payout']
+vrbo_p4_header = ['\ufeffRefID', 'Reservation ID', 'Check In', 'Check Out', 'Number of Nights', 'Payment Date', 'Disbursement Date', 'Payment Type', 'Property ID', 'Guest Name', 'Payment Method', 'Taxable Revenue', 'Non-Taxable Revenue', 'Tax', 'Service Fee', 'Currency', 'Paid By Guest', 'Your Revenue', 'Payment Processing Fee', 'Stay Tax We Remit', 'Stay Tax You Remit', 'Deposit Amount', 'Payable To You']
+
 
 def digit_clean(dirty_text):
     return re.search('\d+', dirty_text).group(0)
@@ -65,7 +67,9 @@ class report():
         3: VRBO Payment Stub V2
         4: VRBO Payment Stub V3
         '''
+
         self.__report_type = self.__report_check()
+        print('type {}'.format(self.__report_type))
         if self.__report_type == 0:
             self.__abb_report_parse()
         elif self.__report_type == 1:
@@ -78,6 +82,8 @@ class report():
             self.__vrbo_p2_parse()
         elif self.__report_type == 5:
             self.__vrbo_p3_parse()
+        elif self.__report_type == 6:
+            self.__vrbo_p4_parse()
     def __report_grab(self, report):
         raw_report = list()
         vraw_report = csv.reader(report, delimiter=',')
@@ -98,7 +104,10 @@ class report():
             return 4
         elif header == vrbo_p3_header:
             return 5
+        elif header == vrbo_p4_header:
+            return 6
         else:
+            print(header)
             return -1
     def __abb_report_parse(self):
         main_dict = dict()
@@ -125,44 +134,50 @@ class report():
     def __vrbo_p1_parse(self):
         main_dict = dict()
         for listing in self.__report:
-            try:
-                if listing[0] != '' and listing[0] != vrbo_p_header[0]:
-                    try:
-                        main_dict[digit_clean(listing[8])].append({'date':date_to_epoch(listing[6],self.type()),'guest':listing[9],'earning':money_clean(listing[21])})
-                    except:
-                        main_dict[digit_clean(listing[8])] = list()
-                        main_dict[digit_clean(listing[8])].append({'date': date_to_epoch(listing[6],self.type()), 'guest': listing[9],
-                                                             'earning': money_clean(listing[21])})
-            except IndexError:
-                continue
+            if listing[0] != '' and listing[0] != vrbo_p1_header[0]:
+                try:
+                    main_dict[digit_clean(listing[8])].append({'date':date_to_epoch(listing[6],self.type()),'guest':listing[9],'earning':money_clean(listing[21])})
+                except:
+                    main_dict[digit_clean(listing[8])] = list()
+                    main_dict[digit_clean(listing[8])].append({'date': date_to_epoch(listing[6],self.type()), 'guest': listing[9],
+                                                         'earning': money_clean(listing[21])})
+        print(main_dict)
         self.__pack = main_dict
     def __vrbo_p2_parse(self):
         main_dict = dict()
         for listing in self.__report:
-            try:
-                if listing[0] != '' and listing[0] != vrbo_p_header[0]:
-                    try:
-                        main_dict[digit_clean(listing[7])].append({'date':date_to_epoch(listing[5],self.type()),'guest':listing[8],'earning':money_clean(listing[25])})
-                    except:
-                        main_dict[digit_clean(listing[7])] = list()
-                        main_dict[digit_clean(listing[7])].append({'date': date_to_epoch(listing[5],self.type()), 'guest': listing[8],
-                                                             'earning': money_clean(listing[25])})
-            except IndexError:
-                continue
+            if listing[0] != '' and listing[0] != vrbo_p2_header[0]:
+                try:
+                    main_dict[digit_clean(listing[7])].append({'date':date_to_epoch(listing[5],self.type()),'guest':listing[8],'earning':money_clean(listing[21])})
+                except:
+                    main_dict[digit_clean(listing[7])] = list()
+                    main_dict[digit_clean(listing[7])].append({'date': date_to_epoch(listing[5],self.type()), 'guest': listing[8],
+                                                         'earning': money_clean(listing[21])})
+        print(main_dict)
         self.__pack = main_dict
     def __vrbo_p3_parse(self):
         main_dict = dict()
         for listing in self.__report:
-            try:
-                if listing[0] != '' and listing[0] != vrbo_p_header[0]:
-                    try:
-                        main_dict[digit_clean(listing[9])].append({'date':date_to_epoch(listing[7],self.type()),'guest':listing[10],'earning':money_clean(listing[21])})
-                    except:
-                        main_dict[digit_clean(listing[9])] = list()
-                        main_dict[digit_clean(listing[9])].append({'date': date_to_epoch(listing[7],self.type()), 'guest': listing[10],
-                                                             'earning': money_clean(listing[21])})
-            except IndexError:
-                continue
+            if listing[0] != '' and listing[0] != vrbo_p3_header[0]:
+                try:
+                    main_dict[digit_clean(listing[9])].append({'date':date_to_epoch(listing[7],self.type()),'guest':listing[10],'earning':money_clean(listing[21])})
+                except:
+                    main_dict[digit_clean(listing[9])] = list()
+                    main_dict[digit_clean(listing[9])].append({'date': date_to_epoch(listing[7],self.type()), 'guest': listing[10],
+                                                         'earning': money_clean(listing[21])})
+        print(main_dict)
+        self.__pack = main_dict
+    def __vrbo_p4_parse(self):
+        main_dict = dict()
+        for listing in self.__report:
+            if listing[0] != '' and listing[0] != vrbo_p4_header[0]:
+                try:
+                    main_dict[digit_clean(listing[8])].append({'date':date_to_epoch(listing[6],self.type()),'guest':listing[9],'earning':money_clean(listing[22])})
+                except:
+                    main_dict[digit_clean(listing[8])] = list()
+                    main_dict[digit_clean(listing[8])].append({'date': date_to_epoch(listing[6],self.type()), 'guest': listing[9],
+                                                         'earning': money_clean(listing[22])})
+        print(main_dict)
         self.__pack = main_dict
     def __vrbo_p_parse(self):
         main_dict = dict()
@@ -177,6 +192,7 @@ class report():
                                                              'earning': money_clean(listing[20])})
             except IndexError:
                 continue
+        print(main_dict)
         self.__pack = main_dict
     def pack(self):
         try:
@@ -184,7 +200,7 @@ class report():
         except:
             return -1
     def type(self):
-        if self.__report_type == 3 or self.__report_type == 4 or self.__report_type == 5:
+        if self.__report_type == 3 or self.__report_type == 4 or self.__report_type == 5 or self.__report_type == 6:
             return 2
         else:
             return self.__report_type

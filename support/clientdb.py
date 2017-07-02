@@ -64,7 +64,7 @@ class MainFile():
                 out_dict[lead_listing].append(self.__pack_format(entry))
         return out_dict
     def append_csv(self, report):
-        with open(report, 'r') as rawreport:
+        with open(report, encoding='utf-8') as rawreport:
             reportparse = parser.report(rawreport)
         if reportparse.type() != -1:
             with open(report, 'rb') as rawreport:

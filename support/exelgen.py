@@ -7,7 +7,7 @@ import xlsxwriter, calendar, datetime, pprint
 from support import baseconvert, parser
 
 def report_list_compile(reports, tar_listing):
-    accepted_type = {0:'abb', 1:'vrbo', 2:'vrbo'}
+    accepted_type = {0:'abb', 1:'abb' , 2:'vrbo', 3:'vrbo'}
     out_list = list()
     for report in reports:
         for listing in report.pack():
@@ -47,6 +47,7 @@ class Gen():
         for listing, entries in self.__combined_listings.items():
             out_dict[listing] = list()
             for entry in entries:
+                print(entry)
                 try:
                     date_not_present = entry['start_date'] == -1
                 except:
@@ -135,9 +136,9 @@ class Gen():
                 if revenue_entries != -1 or nights_entries != -1:
                     worksheet = workbook.add_worksheet(text_truncate(listing,31))
                     cur_row = 0
-                    service = {0:'Airbnb',1:'VRBO',2:'VRBO'}
+                    service = {0:'Airbnb',1:'Airbnb',2:'VRBO', 3:'VRBO'}
                     service['abb'] = service[0]
-                    service['vrbo'] = service[1]
+                    service['vrbo'] = service[2]
                     if revenue_entries != -1:
                         revenue_head = ['Service','Payment Date','Guest','Amount ($)']
                         worksheet, cur_row = self.__worksheet_write_list(worksheet, revenue_head, cur_row)
@@ -147,11 +148,9 @@ class Gen():
                         for entry in self.__revenue_page[listing]:
                             revenue_line = [service[entry['type']],parser.epoch_to_date(entry['date']),entry['guest'],entry['earning']]
                             worksheet, cur_row = self.__worksheet_write_list(worksheet,revenue_line,cur_row)
-                            if entry['type'] == 0:
+                            if entry['type'] == 0 or entry['type'] == 1:
                                 abb_list.append(cur_row)
-                            elif entry['type'] == 1:
-                                vrbo_list.append(cur_row)
-                            elif entry['type'] == 2:
+                            elif entry['type'] == 2 or entry['type'] == 3:
                                 vrbo_list.append(cur_row)
                         cur_row += 1
                         worksheet.write(cur_row,2,'{} TOTAL: '.format(service['abb']))
@@ -185,9 +184,9 @@ class Gen():
                             elif special == 1:
                                 sp_format1 = workbook.add_format({'font_color': 'red'})
                                 worksheet, cur_row = self.__worksheet_write_list(worksheet, night_line, cur_row,format=sp_format1)
-                            if entry['type'] == 0:
+                            if entry['type'] == 0 or entry['type'] == 1:
                                 abb_list.append(cur_row)
-                            elif entry['type'] == 1 or entry ['type'] == 2:
+                            elif entry['type'] == 2 or entry ['type'] == 3:
                                 vrbo_list.append(cur_row)
                         cur_row += 1
                         worksheet.write(cur_row, 2, '{} TOTAL: '.format(service['abb']))

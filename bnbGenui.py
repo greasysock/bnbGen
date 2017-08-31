@@ -142,7 +142,7 @@ class MyWindow(Gtk.Window):
             try:
                 dialog = MonthDialog(self,last_selection=self.last_month-1)
             except:
-                currentmonth = exelgen.current_month()
+                currentmonth = exelgen.current_month() - 1
                 dialog = MonthDialog(self,last_selection=currentmonth-1)
             response = dialog.run()
             if response == Gtk.ResponseType.OK:

@@ -2,9 +2,23 @@ from support import version
 __author__ = version.get_version()
 __version__ = version.get_author()
 
-import sqlite3, hashlib, os
+import sqlite3, hashlib, os, base64
 from support import parser, exelgen
 from random import randint
+import binascii
+
+def b64_to_text(text):
+    out_text = text
+    try:
+        out_text = base64.b64decode(text)
+    except binascii.Error:
+        return text
+    try:
+        return str(out_text, "utf-8")
+    except UnicodeDecodeError:
+        return out_text
+def text_to_b64(text):
+    return base64.b64encode(text.encode('utf-8')).decode('ascii')
 
 class MainFile():
 
@@ -52,7 +66,7 @@ class MainFile():
                     out_dict[parentlisting].append(entry)
         return out_dict
     def __pack_format(self, entry):
-        pack_format = {0:{'date':entry[1],'start_date':entry[2],'guest':entry[5],'earning':entry[4],'stay':entry[3],'clean_fee':entry[7],'type':entry[6]},1:{'start_date':entry[2],'stay':entry[3],'guest':entry[5],'type':entry[6]},2:{'date':entry[1],'guest':entry[5],'earning':entry[4], 'type':entry[6]}}
+        pack_format = {0:{'date':entry[1],'start_date':entry[2],'guest':b64_to_text(entry[5]),'earning':entry[4],'stay':entry[3],'clean_fee':entry[7],'type':entry[6]},2:{'start_date':entry[2],'stay':entry[3],'guest':b64_to_text(entry[5]),'type':entry[6]},3:{'date':entry[1],'guest':b64_to_text(entry[5]),'earning':entry[4], 'type':entry[6]}}
         return pack_format[entry[6]]
     def pack(self):
         sorted_pack = self.iterate_sort()
@@ -95,26 +109,42 @@ class MainFile():
                 for listing in reportparse.pack():
                     listing_id = self.append_listing(listing)
                     for entry in reportparse.pack()[listing]:
-                        if csv_type == 0:
-                            self.__c.execute(listing_command.format(listing_id, entry['date'],entry['start_date'],entry['stay'],entry['earning'],entry['guest'], csv_type, entry['clean_fee']))
-                        elif csv_type == 1:
+                        if csv_type == 0 or csv_type == 1:
+                            self.__c.execute(listing_command.format(listing_id, entry['date'],entry['start_date'],entry['stay'],entry['earning'],text_to_b64(entry['guest']), csv_type, entry['clean_fee']))
+                        elif csv_type == 2:
+                            print(listing_command.format(listing_id,
+                                                                                                               nil,
+                                                                                                               entry['start_date'],
+                                                                                                               entry['stay'],
+                                                                                                               nil,
+                                                                                                               text_to_b64(entry['guest']),
+                                                                                                               csv_type,
+                                                                                                                nil))
                             self.__c.execute(
                                 listing_command.format(listing_id,
                                                                                                                nil,
                                                                                                                entry['start_date'],
                                                                                                                entry['stay'],
                                                                                                                nil,
-                                                                                                               entry['guest'],
+                                                                                                               text_to_b64(entry['guest']),
                                                                                                                csv_type,
                                                                                                                 nil))
-                        elif csv_type == 2:
+                        elif csv_type == 3:
+                            print(listing_command.format(listing_id,
+                                                                                                               entry['date'],
+                                                                                                               nil,
+                                                                                                               nil,
+                                                                                                               entry['earning'],
+                                                                                                               text_to_b64(entry['guest']),
+                                                                                                               csv_type,
+                                                                                                               nil))
                             self.__c.execute(
                                listing_command.format(listing_id,
                                                                                                                entry['date'],
                                                                                                                nil,
                                                                                                                nil,
                                                                                                                entry['earning'],
-                                                                                                               entry['guest'],
+                                                                                                               text_to_b64(entry['guest']),
                                                                                                                csv_type,
                                                                                                                nil))
     def get_listings(self):

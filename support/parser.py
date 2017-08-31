@@ -20,11 +20,11 @@ def epoch_to_date(epoch):
     return time.strftime('%Y-%m-%d', time.localtime(epoch))
 def date_to_epoch(date, report_type):
     #May need timezone revision
-    if report_type == 0:
+    if report_type == 0 or report_type == 1:
         return time.mktime(datetime.datetime.strptime(date, "%m/%d/%Y").timetuple())
-    elif report_type == 1:
-        return time.mktime(datetime.datetime.strptime(date, "%Y-%m-%d").timetuple())
     elif report_type == 2:
+        return time.mktime(datetime.datetime.strptime(date, "%Y-%m-%d").timetuple())
+    elif report_type == 3:
         months = {
             'Jan':1,
             'Feb':2,
@@ -62,27 +62,31 @@ class report():
 
         -1: Not Valid
         0: ABB
-        1: VRBO Reservations
-        2: VRBO Payment Stub
-        3: VRBO Payment Stub V2
-        4: VRBO Payment Stub V3
+        1: ABB Wild
+        
+        2: VRBO Reservations
+        3: VRBO Payment Stub
+        4: VRBO Payment Stub V2
+        5: VRBO Payment Stub V3
+        ...
+        8: VRBO Wild
         '''
 
         self.__report_type = self.__report_check()
         print('type {}'.format(self.__report_type))
         if self.__report_type == 0:
             self.__abb_report_parse()
-        elif self.__report_type == 1:
-            self.__vrbo_r_parse()
         elif self.__report_type == 2:
-            self.__vrbo_p_parse()
+            self.__vrbo_r_parse()
         elif self.__report_type == 3:
-            self.__vrbo_p1_parse()
+            self.__vrbo_p_parse()
         elif self.__report_type == 4:
-            self.__vrbo_p2_parse()
+            self.__vrbo_p1_parse()
         elif self.__report_type == 5:
-            self.__vrbo_p3_parse()
+            self.__vrbo_p2_parse()
         elif self.__report_type == 6:
+            self.__vrbo_p3_parse()
+        elif self.__report_type == 7:
             self.__vrbo_p4_parse()
     def __report_grab(self, report):
         raw_report = list()
@@ -95,17 +99,17 @@ class report():
         if header == abb_header:
             return 0
         elif header == vrbo_r_header:
-            return 1
-        elif header == vrbo_p_header:
             return 2
-        elif header == vrbo_p1_header:
+        elif header == vrbo_p_header:
             return 3
-        elif header == vrbo_p2_header:
+        elif header == vrbo_p1_header:
             return 4
-        elif header == vrbo_p3_header:
+        elif header == vrbo_p2_header:
             return 5
-        elif header == vrbo_p4_header:
+        elif header == vrbo_p3_header:
             return 6
+        elif header == vrbo_p4_header:
+            return 7
         else:
             print(header)
             return -1
@@ -200,8 +204,8 @@ class report():
         except:
             return -1
     def type(self):
-        if self.__report_type == 3 or self.__report_type == 4 or self.__report_type == 5 or self.__report_type == 6:
-            return 2
+        if self.__report_type == 3 or self.__report_type == 4 or self.__report_type == 5 or self.__report_type == 6 or self.__report_type == 7:
+            return 3
         else:
             return self.__report_type
     def combine_listing(self, main_listing, new_listing):

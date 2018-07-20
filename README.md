@@ -1,7 +1,5 @@
 # bnbGen
 
-## About
-
 bnbGen is a software for generating monthly reports for AirBNB and VRBO .csv files. bnbGen will output an easy to understand excel file.
 
 ### Requirements
